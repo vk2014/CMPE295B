@@ -97,17 +97,17 @@ func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
 func getServices(uLatitude string,uLongitude string,uService,uRadius string) string {
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
 	if err2 != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in parsing getServices uLatitude ")
 	}
 
 	ulg, err1 := strconv.ParseFloat(uLongitude, 64)
 	if err1 != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in parsing getServices uLongitude")
 	}
 
 	usrRadius, err2 := strconv.ParseFloat(uRadius, 64)
 	if err2 != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in parsing getServices uRadius")
 	}
 
 	//fmt.Println(ulg,ult,usrRadius)
@@ -154,7 +154,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 
 	jsonInfo,err := json.Marshal(Vendors)
 	if err != nil {
-		fmt.Println("Error in JSON marchslling")
+		fmt.Println("Error in getServices JSON marchslling")
 	}
 
 	S := string(jsonInfo)
@@ -166,12 +166,12 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 func getDefaultServices(uLatitude string,uLongitude string) string {
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
 	if err2 != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in parsing getDefaultServices uLatitude ")
 	}
 
 	ulg, err1 := strconv.ParseFloat(uLongitude, 64)
 	if err1 != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in parsing getDefaultServices uLatitude ")
 	}
 
 	//fmt.Println(ulg,ult,usrRadius)
@@ -220,7 +220,7 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 
 	jsonInfo,err := json.Marshal(Vendors)
 	if err != nil {
-		fmt.Println("Error in JSON marchslling")
+		fmt.Println("Error in getDefaultServices JSON marchslling")
 	}
 
 	S := string(jsonInfo)
@@ -353,6 +353,7 @@ func insertUser(fname string, lname string, emailid string, password string) {
 
 func main() {
 
+	fmt.Println("Server started 123.....")
 
 	l,err := syslog.New(syslog.LOG_ERR,"VKR")
 	defer l.Close()
@@ -365,6 +366,8 @@ func main() {
 		http.HandleFunc("/getdefaultservices", handlerDefaultServices)
 
 		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		fmt.Println("Server started 456.....")
 		if err != nil {
 			l.Alert(error.Error())
 		}
