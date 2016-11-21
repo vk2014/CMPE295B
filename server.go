@@ -13,6 +13,10 @@ import (
 	"encoding/json"
 	"log/syslog"
 	//"github.com/gavv/gojsondiff/Godeps/_workspace/src/github.com/onsi/ginkgo/ginkgo/convert"
+
+	"io/ioutil"
+	//"github.com/revel/modules/db/app"
+	"strings"
 )
 
 type Vendor struct {
@@ -21,24 +25,45 @@ type Vendor struct {
 	CouponCode int32
 }
 
+type VendorList []Vendor
+
 type User struct {
 	fname string
 	lname string
 	emailid string
 }
 
+type UserList []User
+
+
 /*type VendorList struct {
 	Vendors []Vendor
 }*/
-
-type VendorList []Vendor
-
-type UserList []User
 
 func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+
+type test_struct struct {
+	Test string
+}
+
+func parsePost(rw http.ResponseWriter, request *http.Request) {
+	decoder := json.NewDecoder(request.Body)
+	fmt.Println(decoder)
+/*
+	var t test_struct
+	err := json.Unmarshal(decoder,&t)
+
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(t)
+	fmt.Println(t.Test)
+*/
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +80,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	insertVendor(name,latitude,longitude,couponcode,biztype)
 }
 
-
 func handlerUser(w http.ResponseWriter, r *http.Request) {
 
 
@@ -70,8 +94,6 @@ func handlerUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Success %s!", r.URL.Path[1:])
 	insertUser(fname,lname,emailid,password)
 }
-
-
 
 func handlerServices(w http.ResponseWriter, r *http.Request) {
 
@@ -163,6 +185,127 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 
 }
 
+type Customer struct {
+	password string
+	username string
+	email string
+}
+
+type CustomerResponse struct {
+	status string
+	message string
+	username string
+}
+
+type customerList []CustomerResponse
+
+
+func AddProfile(w http.ResponseWriter, r *http.Request) {
+
+	var httpMethod = r.Method
+	fmt.Println(httpMethod)
+
+	if strings.EqualFold(httpMethod, "PUT") {
+		//var u Customer
+		if r.Body == nil {
+			http.Error(w, "Please send a request body", 400)
+			return
+		}
+		//err := json.NewDecoder(r.Body).Decode(&u)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+
+		var str = r.RequestURI
+		fmt.Println(str)
+		fmt.Println(body)
+
+	}
+}
+
+func AddUser(w http.ResponseWriter, r *http.Request) {
+
+	var httpMethod = r.Method
+	fmt.Println(httpMethod)
+
+	if strings.EqualFold(httpMethod,"POST") {
+		//var u Customer
+		if r.Body == nil {
+			http.Error(w, "Please send a request body", 400)
+			return
+		}
+		//err := json.NewDecoder(r.Body).Decode(&u)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+
+
+		var jsonBody map[string]string
+
+		if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
+			fmt.Print(err2.Error())
+		}
+
+		username := jsonBody["username"]
+		email := jsonBody["email"]
+		password := jsonBody["password"]
+
+		//fmt.Println(username,email,password)
+
+
+		db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
+		checkErr(err)
+
+		stmt, err := db.Prepare("INSERT customers SET username=?,email=?,password=?")
+		checkErr(err)
+
+		res, err := stmt.Exec(username, email, password)
+		checkErr(err)
+
+		res.LastInsertId()
+
+		db.Close()
+
+		var Vendors = map[string]string{}
+
+		Vendors["status"] = "Added"
+		Vendors["message"] = "User"
+		Vendors["username"] = username
+
+		//fmt.Println(Vendors)
+
+		jsonInfo, err := json.Marshal(Vendors)
+		if err != nil {
+			fmt.Println("Error in getDefaultServices JSON marchslling")
+		}
+		//fmt.Println(jsonInfo)
+		//fmt.Println(Vendors)
+
+		jsonInfo, err1 := json.Marshal(Vendors)
+
+		//fmt.Println(jsonInfo)
+
+		if err1 != nil {
+			fmt.Println("Error in getDefaultServices JSON marchslling")
+		}
+
+		w.Write(jsonInfo)
+		S := string(jsonInfo)
+		//fmt.Printf("%+v", S)
+		fmt.Println(S)
+		//fmt.Fprintf(w, "%s",S)
+
+	}else{
+		http.Error(w,"Method not supported",400)
+	}
+
+
+}
+
 func getDefaultServices(uLatitude string,uLongitude string) string {
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
 	if err2 != nil {
@@ -187,7 +330,7 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 	defer rows.Close()
 
 	//var VendorId Vendor
-	var Vendors = make(VendorList,1,100)
+	var Vendors = make(VendorList,0)
 	//var counter int = 0
 
 	for rows.Next() {
@@ -217,11 +360,14 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 		log.Fatal(err)
 	}
 	db.Close()
+	fmt.Println(Vendors)
 
 	jsonInfo,err := json.Marshal(Vendors)
 	if err != nil {
 		fmt.Println("Error in getDefaultServices JSON marchslling")
 	}
+
+	fmt.Println(jsonInfo)
 
 	S := string(jsonInfo)
 	fmt.Println(S)
@@ -364,10 +510,12 @@ func main() {
 		http.HandleFunc("/insertuser", handlerUser)
 		http.HandleFunc("/getservices", handlerServices)
 		http.HandleFunc("/getdefaultservices", handlerDefaultServices)
+		http.HandleFunc("/adduser", AddUser)
+		http.HandleFunc("/post", parsePost)
 
-		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
-		fmt.Println("Server started 456.....")
+		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		fmt.Println("Server finished 456.....")
 		if err != nil {
 			l.Alert(error.Error())
 		}
