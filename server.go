@@ -293,6 +293,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Error in getDefaultServices JSON marchslling")
 		}
 
+		w.Header().Add("Content-Type","application/json")
 		w.Write(jsonInfo)
 		S := string(jsonInfo)
 		//fmt.Printf("%+v", S)
