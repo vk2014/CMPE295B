@@ -144,7 +144,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 	}
 	defer rows.Close()
 	//var VendorId Vendor
-	var Vendors = make(VendorList,1,100)
+	var Vendors = make(VendorList,0)
 	//var counter int = 0
 
 	for rows.Next() {
