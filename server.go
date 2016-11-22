@@ -17,7 +17,11 @@ import (
 	"io/ioutil"
 	//"github.com/revel/modules/db/app"
 	"strings"
+	"regexp"
 )
+
+var regexAddProfile = regexp.MustCompile(`addprofile`)
+
 
 type Vendor struct {
 	Distance float64
@@ -35,7 +39,19 @@ type User struct {
 
 type UserList []User
 
+type UserProfiles struct {
+	profile Profile
+}
 
+type Profile struct {
+
+	billingContact string
+	address string
+	email string
+	zipCode string
+	carLicensePlat string
+
+}
 /*type VendorList struct {
 	Vendors []Vendor
 }*/
@@ -199,8 +215,8 @@ type CustomerResponse struct {
 
 type customerList []CustomerResponse
 
-
-func AddProfile(w http.ResponseWriter, r *http.Request) {
+/*
+func AddProfile1(w http.ResponseWriter, r *http.Request) {
 
 	var httpMethod = r.Method
 	fmt.Println(httpMethod)
@@ -224,6 +240,7 @@ func AddProfile(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
+*/
 
 func AddUser(w http.ResponseWriter, r *http.Request) {
 
@@ -497,6 +514,159 @@ func insertUser(fname string, lname string, emailid string, password string) {
 
 }
 
+func UserRoute(w http.ResponseWriter, r *http.Request) {
+
+/*var httpMethod = r.Method
+fmt.Println(httpMethod)
+
+if strings.EqualFold(httpMethod, "PUT") {
+//var u Customer
+if r.Body == nil {
+http.Error(w, "Please send a request body", 400)
+return
+}
+//err := json.NewDecoder(r.Body).Decode(&u)
+body, err := ioutil.ReadAll(r.Body)
+if err != nil {
+http.Error(w, err.Error(), 400)
+return
+}
+
+var str = r.RequestURI
+fmt.Println(str)
+fmt.Println(body)
+}
+*/
+
+	fmt.Println(r.URL.Path)
+	switch {
+	case regexAddProfile.MatchString(r.URL.Path):
+		AddProfile(w, r)
+	default:
+		w.Write([]byte("Unknown URL"))
+	}
+
+}
+
+func AddProfile(w http.ResponseWriter, r *http.Request){
+	if strings.EqualFold(r.Method, "PUT") {
+	      arrTemp := strings.Split(r.URL.Path,"/")
+		if strings.EqualFold(arrTemp[1],"user") && strings.EqualFold(arrTemp[3],"addprofile"){
+			username :=arrTemp[2]
+			fmt.Println(username)
+			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
+			checkErr(err)
+
+			//var result string = ""
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer rows.Close()
+			//var VendorId Vendor
+			//var Vendors = make(VendorList,0)
+			//var counter int = 0
+			var name string
+
+			for rows.Next() {
+
+				if err := rows.Scan(&name); err != nil {
+					log.Fatal(err)
+				}
+
+
+			}
+			if err := rows.Err(); err != nil {
+				log.Fatal(err)
+			}
+			db.Close()
+
+			if strings.EqualFold(username,name) {
+
+				if r.Body == nil {
+					http.Error(w, "Please send a request body", 400)
+					return
+				}
+				//err := json.NewDecoder(r.Body).Decode(&u)
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					http.Error(w, err.Error(), 400)
+					return
+				}
+
+
+				var jsonBody map[string]string
+
+
+				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
+					fmt.Print(err2.Error())
+				}
+
+
+				billingContact := jsonBody["billingContact"]
+				address := jsonBody["address"]
+				email := jsonBody["email"]
+				zipcode := jsonBody["zipCode"]
+				carLicensePlat := jsonBody["carLicensePlat"]
+
+				fmt.Println(billingContact,address,email,zipcode,carLicensePlat)
+
+
+				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
+				checkErr(err)
+
+				stmt, err := db.Prepare("INSERT profiles SET billingContact=?,address=?,email=?,zipcode=?,carLicensePlat=?")
+				checkErr(err)
+
+				res, err := stmt.Exec(billingContact, address, email, zipcode, carLicensePlat)
+				checkErr(err)
+
+				res.LastInsertId()
+
+				db.Close()
+
+				var Vendors = map[string]string{}
+
+				Vendors["billingContact"] = billingContact
+				Vendors["address"] = address
+				Vendors["email"] = email
+				Vendors["zipcode"] = zipcode
+				Vendors["carlicenseplate"] = carLicensePlat
+
+				//fmt.Println(Vendors)
+
+				jsonInfo, err := json.Marshal(Vendors)
+				if err != nil {
+					fmt.Println("Error in getDefaultServices JSON marchslling")
+				}
+				//fmt.Println(jsonInfo)
+				//fmt.Println(Vendors)
+
+				jsonInfo, err1 := json.Marshal(Vendors)
+
+				//fmt.Println(jsonInfo)
+
+				if err1 != nil {
+					fmt.Println("Error in getDefaultServices JSON marchslling")
+				}
+
+				w.Header().Add("Content-Type","application/json")
+				w.Write(jsonInfo)
+				S := string(jsonInfo)
+				//fmt.Printf("%+v", S)
+				fmt.Println(S)
+				//fmt.Fprintf(w, "%s",S)
+
+			}
+
+		}
+
+	}
+	w.Write([]byte("DONE"))
+
+}
+
+
 
 func main() {
 
@@ -512,10 +682,11 @@ func main() {
 		http.HandleFunc("/getservices", handlerServices)
 		http.HandleFunc("/getdefaultservices", handlerDefaultServices)
 		http.HandleFunc("/adduser", AddUser)
-		http.HandleFunc("/post", parsePost)
+		//http.HandleFunc("/addprofile", AddProfile)
+		http.HandleFunc("/", UserRoute)
 
-		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		fmt.Println("Server finished 456.....")
 		if err != nil {
 			l.Alert(error.Error())
