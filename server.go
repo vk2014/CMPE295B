@@ -1,3 +1,6 @@
+// Copyright Cisco Systems, Inc.
+// All Rights Reserved.
+// This package provides the server functionality for rendering different services for each client request
 package main
 
 import (
@@ -16,6 +19,9 @@ import (
 	"io/ioutil"
 	"strings"
 	"regexp"
+
+	"bytes"
+
 )
 
 var regexProfile = regexp.MustCompile(`profile`)
@@ -180,6 +186,9 @@ func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Default Services rendered")
 }
 
+// getServices API returns the services within distance range.
+// API needs input paramaters like user Latitude, Longitude, requested Service and Radius
+// API returns a JSON object with all the services found within the radius and service requested.
 func getServices(uLatitude string,uLongitude string,uService,uRadius string) string {
 	logwritter.Notice("Requesting Services")
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
@@ -1100,6 +1109,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 			S := string(jsonInfo)
 			fmt.Println(S)
+			w.Write(jsonInfo)
 			logwritter.Notice("Get User details rendered")
 
 			//return S
@@ -1210,6 +1220,11 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				//fmt.Printf("%+v", S)
 				fmt.Println(S)
 				//fmt.Fprintf(w, "%s",S)
+				SendPO("http://127.0.0.1:9443/")
+
+
+
+
 			}
 
 		}
@@ -1218,6 +1233,23 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
+func SendPO(url string){
+	var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
+}
 func Parking(w http.ResponseWriter, r *http.Request){
 	logwritter.Notice("Requesting Parking")
 	if strings.EqualFold(r.Method, "POST") {
@@ -1342,8 +1374,8 @@ func main() {
 		//http.HandleFunc("/addprofile", AddProfile)
 		http.HandleFunc("/", UserRoute)
 
-		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		logwritter.Err("Unable to Start Server")
 		fmt.Println("Server finished 456.....")
 		if err != nil {
