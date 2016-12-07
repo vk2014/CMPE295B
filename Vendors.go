@@ -1,3 +1,4 @@
+// This package runs as http service which mimics Vendors for PO.
 package main
 
 import (
@@ -5,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
 	"log/syslog"
 )
 
