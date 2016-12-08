@@ -19,11 +19,9 @@ import (
 	"io/ioutil"
 	"strings"
 	"regexp"
-
 	"bytes"
-
-	"os"
-	"github.com/streadway/amqp"
+	//"os"
+	//"github.com/streadway/amqp"
 )
 
 var regexProfile = regexp.MustCompile(`profile`)
@@ -1235,6 +1233,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
+/*
 func failOnError1(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
@@ -1310,6 +1309,7 @@ func GetMessages(){
 	log.Printf(" [*] Waiting for logs. To exit press CTRL+C")
 	<-forever
 }
+*/
 
 func SendPO(url string){
 	var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
@@ -1452,8 +1452,8 @@ func main() {
 		//http.HandleFunc("/addprofile", AddProfile)
 		http.HandleFunc("/", UserRoute)
 
-		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		logwritter.Err("Unable to Start Server")
 		fmt.Println("Server finished 456.....")
 		if err != nil {
