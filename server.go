@@ -30,6 +30,8 @@ var regexSmartParking = regexp.MustCompile(`smartparking`)
 var regexDeleteUser = regexp.MustCompile(`user`)
 var regexGetUser = regexp.MustCompile(`user`)
 var regexPark = regexp.MustCompile(`park`)
+var regexSensor = regexp.MustCompile(`park`)
+
 
 type GetUserstruct struct {
 	billingContact string
@@ -610,6 +612,8 @@ func UserRoute(w http.ResponseWriter, r *http.Request) {
 		DeleteUser(w, r)
 	case regexGetUser.MatchString(r.URL.Path) && strings.EqualFold(r.Method,"GET"):
 		GetUser(w, r)
+	case regexSensor.MatchString(r.URL.Path) && strings.EqualFold(r.Method,"PUT"):
+		Sensor(w, r)
 	case regexPark.MatchString(r.URL.Path):
 		Parking(w, r)
 	default:
@@ -1432,6 +1436,111 @@ func Parking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
+func Sensor(w http.ResponseWriter, r *http.Request){
+	logwritter.Notice("Processing Sensor Data")
+	if strings.EqualFold(r.Method, "PUT") {
+		arrTemp := strings.Split(r.URL.Path,"/")
+		if strings.EqualFold(arrTemp[1],"park"){
+			Parkingid :=arrTemp[2]
+			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
+			checkErr(err)
+
+			//var result string = ""
+			rows, err := db.Query("SELECT Parkingid FROM parking WHERE Parkingid=?",Parkingid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer rows.Close()
+
+			var name string
+			for rows.Next() {
+
+				if err := rows.Scan(&name); err != nil {
+					log.Fatal(err)
+				}
+			}
+			if err := rows.Err(); err != nil {
+				log.Fatal(err)
+			}
+			db.Close()
+
+			if strings.EqualFold(Parkingid,name) {
+
+				if r.Body == nil {
+					http.Error(w, "Please send a request body", 400)
+					return
+				}
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					http.Error(w, err.Error(), 400)
+					return
+				}
+
+				var jsonBody map[string]string
+
+
+				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
+					fmt.Print(err2.Error())
+				}
+
+				Occupied := jsonBody["Occupied"]
+
+				//fmt.Println(billingContact,address,email,zipcode,carLicensePlat)
+
+				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
+				checkErr(err)
+
+				stmt, err := db.Prepare("UPDATE parking SET Parkingid=?,Occupied=?")
+				checkErr(err)
+
+				res, err := stmt.Exec(Parkingid,Occupied)
+				checkErr(err)
+
+				res.LastInsertId()
+				logwritter.Notice("Sensor Data for Parkingid "+Parkingid+" updated")
+
+				db.Close()
+
+				var Vendors = map[string]string{}
+
+				Vendors["status"] = "OK"
+				Vendors["message"] = "Sensor Info Saved"
+				Vendors["messageCode"] = "200"
+
+				//fmt.Println(Vendors)
+
+				jsonInfo, err := json.Marshal(Vendors)
+				if err != nil {
+					logwritter.Err("Error in Sensor JSON marchslling")
+					fmt.Println("Error in Sensor JSON marchslling")
+				}
+				//fmt.Println(jsonInfo)
+				//fmt.Println(Vendors)
+
+				jsonInfo, err1 := json.Marshal(Vendors)
+
+				//fmt.Println(jsonInfo)
+
+				if err1 != nil {
+					logwritter.Err("Error in Sensor JSON marchslling")
+					fmt.Println("Error in Sensor JSON marchslling")
+				}
+
+				w.Header().Add("Content-Type","application/json")
+				w.Write(jsonInfo)
+				S := string(jsonInfo)
+				//fmt.Printf("%+v", S)
+				fmt.Println(S)
+				//fmt.Fprintf(w, "%s",S)
+			}
+
+		}
+
+	}
+	//w.Write([]byte("DONE"))
+}
+
+
 var logwritter, err = syslog.New(syslog.LOG_ERR,"CMPE295B")
 
 func main() {
@@ -1452,8 +1561,8 @@ func main() {
 		//http.HandleFunc("/addprofile", AddProfile)
 		http.HandleFunc("/", UserRoute)
 
-		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		logwritter.Err("Unable to Start Server")
 		fmt.Println("Server finished 456.....")
 		if err != nil {
