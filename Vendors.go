@@ -33,28 +33,28 @@ func Vendors(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var logwritter, err = syslog.New(syslog.LOG_ERR,"Vendors")
+var logwritterVendors, err = syslog.New(syslog.LOG_ERR,"Vendors")
 
 func main(){
 
 	fmt.Println("Vendors started .....")
 
 	//logwritter,err := syslog.New(syslog.LOG_ERR,"CMPE295B")
-	defer logwritter.Close()
+	defer logwritterVendors.Close()
 	if err != nil {
 		log.Fatal("Error in the System")
 	}else {
-		logwritter.Notice("Starting Server")
+		logwritterVendors.Notice("Starting Server")
 
 		http.HandleFunc("/", Vendors)
 
 		//error := http.ListenAndServeTLS(":9443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
 		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		error := http.ListenAndServe(":9443",nil)
-		logwritter.Err("Unable to Start Server")
+		logwritterVendors.Err("Unable to Start Server")
 		fmt.Println("Server finished .....")
 		if err != nil {
-			logwritter.Alert(error.Error())
+			logwritterVendors.Alert(error.Error())
 		}
 	}
 
