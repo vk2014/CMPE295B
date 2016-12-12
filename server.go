@@ -4,22 +4,22 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"math"
-//	"strings"
-	"strconv"
+	"net/http"
+	//	"strings"
+	"encoding/json"
 	"github.com/kellydunn/golang-geo"
 	"log"
-	"encoding/json"
 	"log/syslog"
+	"strconv"
 	//"github.com/gavv/gojsondiff/Godeps/_workspace/src/github.com/onsi/ginkgo/ginkgo/convert"
-	"io/ioutil"
-	"strings"
-	"regexp"
 	"bytes"
+	"io/ioutil"
+	"regexp"
+	"strings"
 	//"os"
 	//"github.com/streadway/amqp"
 )
@@ -32,27 +32,26 @@ var regexGetUser = regexp.MustCompile(`user`)
 var regexPark = regexp.MustCompile(`park`)
 var regexSensor = regexp.MustCompile(`park`)
 
-
 type GetUserstruct struct {
-	billingContact string
-	address string
-	email string
-	zipCode string
-	carLicensePlat string
-	shareLicencePlate string
+	billingContact       string
+	address              string
+	email                string
+	zipCode              string
+	carLicensePlat       string
+	shareLicencePlate    string
 	shareParkingDuration string
-	shareServiceUsages string
-	occupyTimeStamp string
-	leaveTimeStamp string
-	duration string
-	usageServices string
-	parkingId string
+	shareServiceUsages   string
+	occupyTimeStamp      string
+	leaveTimeStamp       string
+	duration             string
+	usageServices        string
+	parkingId            string
 }
 
 type GetUserList []GetUserstruct
 
 type Vendor struct {
-	Distance float64
+	Distance   float64
 	VendorName string
 	CouponCode int32
 }
@@ -60,8 +59,8 @@ type Vendor struct {
 type VendorList []Vendor
 
 type User struct {
-	fname string
-	lname string
+	fname   string
+	lname   string
 	emailid string
 }
 
@@ -70,12 +69,12 @@ type UserList []User
 type Customer struct {
 	password string
 	username string
-	email string
+	email    string
 }
 
 type CustomerResponse struct {
-	status string
-	message string
+	status   string
+	message  string
 	username string
 }
 
@@ -86,19 +85,17 @@ type UserProfiles struct {
 }
 
 type Profiles struct {
-
 	billingContact string
-	address string
-	email string
-	zipCode string
+	address        string
+	email          string
+	zipCode        string
 	carLicensePlat string
-
 }
 
 type ProfileResponse struct {
-status string
-message string
-messageCode string
+	status      string
+	message     string
+	messageCode string
 }
 
 type profileList []ProfileResponse
@@ -129,16 +126,16 @@ type test_struct struct {
 func parsePost(rw http.ResponseWriter, request *http.Request) {
 	decoder := json.NewDecoder(request.Body)
 	fmt.Println(decoder)
-/*
-	var t test_struct
-	err := json.Unmarshal(decoder,&t)
+	/*
+		var t test_struct
+		err := json.Unmarshal(decoder,&t)
 
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(t)
-	fmt.Println(t.Test)
-*/
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(t)
+		fmt.Println(t.Test)
+	*/
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -150,8 +147,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	biztype := r.URL.Query().Get("biztype")
 
 	fmt.Fprintf(w, "Success %s!", r.URL.Path[1:])
-	insertVendor(name,latitude,longitude,couponcode,biztype)
-	logwritter.Notice("Vendor "+name+" Inserted")
+	insertVendor(name, latitude, longitude, couponcode, biztype)
+	logwritter.Notice("Vendor " + name + " Inserted")
 }
 
 func handlerUser(w http.ResponseWriter, r *http.Request) {
@@ -164,8 +161,8 @@ func handlerUser(w http.ResponseWriter, r *http.Request) {
 	password := r.URL.Query().Get("password")
 
 	fmt.Fprintf(w, "Success %s!", r.URL.Path[1:])
-	insertUser(fname,lname,emailid,password)
-	logwritter.Notice("User "+fname+" Inserted")
+	insertUser(fname, lname, emailid, password)
+	logwritter.Notice("User " + fname + " Inserted")
 }
 
 func handlerServices(w http.ResponseWriter, r *http.Request) {
@@ -175,8 +172,8 @@ func handlerServices(w http.ResponseWriter, r *http.Request) {
 	userService := r.URL.Query().Get("type")
 	userRadius := r.URL.Query().Get("radius")
 
-	fmt.Fprintf(w, "%s", getServices(userLatitude,userLongitude,userService,userRadius))
-	logwritter.Notice("User requested Services "+userService+" rendered")
+	fmt.Fprintf(w, "%s", getServices(userLatitude, userLongitude, userService, userRadius))
+	logwritter.Notice("User requested Services " + userService + " rendered")
 }
 
 func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
@@ -184,14 +181,14 @@ func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
 	userLongitude := r.URL.Query().Get("longitude")
 	userLatitude := r.URL.Query().Get("latitude")
 
-	fmt.Fprintf(w, "%s", getDefaultServices(userLatitude,userLongitude))
+	fmt.Fprintf(w, "%s", getDefaultServices(userLatitude, userLongitude))
 	logwritter.Notice("Default Services rendered")
 }
 
 // getServices API returns the services within distance range.
 // API needs input paramaters like user Latitude, Longitude, requested Service and Radius
 // API returns a JSON object with all the services found within the radius and service requested.
-func getServices(uLatitude string,uLongitude string,uService,uRadius string) string {
+func getServices(uLatitude string, uLongitude string, uService, uRadius string) string {
 	logwritter.Notice("Requesting Services")
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
 	if err2 != nil {
@@ -217,7 +214,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 	checkErr(err)
 
 	var result string = ""
-	rows, err := db.Query("SELECT name,latitude,longitude,couponcode,biztype FROM vendors WHERE biztype=?",uService )
+	rows, err := db.Query("SELECT name,latitude,longitude,couponcode,biztype FROM vendors WHERE biztype=?", uService)
 	logwritter.Notice("Reading user selected services from database")
 	if err != nil {
 		logwritter.Err("Error connecting to database")
@@ -226,7 +223,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 	}
 	defer rows.Close()
 	//var VendorId Vendor
-	var Vendors = make(VendorList,0)
+	var Vendors = make(VendorList, 0)
 	//var counter int = 0
 
 	for rows.Next() {
@@ -235,19 +232,19 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 		var latitude float64
 		var couponcode int32
 		var biztype string
-		if err := rows.Scan(&name,&latitude,&longitude,&couponcode,&biztype); err != nil {
+		if err := rows.Scan(&name, &latitude, &longitude, &couponcode, &biztype); err != nil {
 			log.Fatal(err)
 		}
 		//fmt.Printf("%s\n", name)
-		difference := Distance(latitude,longitude,ult,ulg)
-		fmt.Println(difference,usrRadius,name)
+		difference := Distance(latitude, longitude, ult, ulg)
+		fmt.Println(difference, usrRadius, name)
 
-		if(difference<usrRadius) {
+		if difference < usrRadius {
 			var vendor Vendor
-			vendor.Distance=difference
-			vendor.CouponCode=couponcode
-			vendor.VendorName=name
-			Vendors = append(Vendors,vendor)
+			vendor.Distance = difference
+			vendor.CouponCode = couponcode
+			vendor.VendorName = name
+			Vendors = append(Vendors, vendor)
 			result = result + fmt.Sprintf("%f", difference) + " " + fmt.Sprintf("%s", name) + "; "
 		}
 	}
@@ -257,7 +254,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 	}
 	db.Close()
 
-	jsonInfo,err := json.Marshal(Vendors)
+	jsonInfo, err := json.Marshal(Vendors)
 	if err != nil {
 		logwritter.Err("Error in getServices JSON marchslling")
 		fmt.Println("Error in getServices JSON marchslling")
@@ -269,7 +266,7 @@ func getServices(uLatitude string,uLongitude string,uService,uRadius string) str
 
 }
 
-func getDefaultServices(uLatitude string,uLongitude string) string {
+func getDefaultServices(uLatitude string, uLongitude string) string {
 	logwritter.Notice("Requesting Default Services")
 	ult, err2 := strconv.ParseFloat(uLatitude, 64)
 	if err2 != nil {
@@ -289,7 +286,7 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 	checkErr(err)
 
 	var result string = ""
-	rows, err := db.Query("SELECT * from vendors" )
+	rows, err := db.Query("SELECT * from vendors")
 	if err != nil {
 		logwritter.Err("Error connecting to database")
 		log.Fatal(err)
@@ -297,7 +294,7 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 	defer rows.Close()
 
 	//var VendorId Vendor
-	var Vendors = make(VendorList,0)
+	var Vendors = make(VendorList, 0)
 	//var counter int = 0
 
 	for rows.Next() {
@@ -307,19 +304,19 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 		var couponcode int32
 		var biztype string
 		var usrDefaultRadius float64 = 150.00
-		if err := rows.Scan(&name,&latitude,&longitude,&couponcode,&biztype); err != nil {
+		if err := rows.Scan(&name, &latitude, &longitude, &couponcode, &biztype); err != nil {
 			log.Fatal(err)
 		}
 		//fmt.Printf("%s\n", name)
-		difference := Distance(latitude,longitude,ult,ulg)
-		fmt.Println(difference,usrDefaultRadius,name)
+		difference := Distance(latitude, longitude, ult, ulg)
+		fmt.Println(difference, usrDefaultRadius, name)
 
-		if(difference<usrDefaultRadius) {
+		if difference < usrDefaultRadius {
 			var vendor Vendor
-			vendor.Distance=difference
-			vendor.CouponCode=couponcode
-			vendor.VendorName=name
-			Vendors = append(Vendors,vendor)
+			vendor.Distance = difference
+			vendor.CouponCode = couponcode
+			vendor.VendorName = name
+			Vendors = append(Vendors, vendor)
 			result = result + fmt.Sprintf("%f", difference) + " " + fmt.Sprintf("%s", name) + "; "
 		}
 	}
@@ -330,7 +327,7 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 	db.Close()
 	fmt.Println(Vendors)
 
-	jsonInfo,err := json.Marshal(Vendors)
+	jsonInfo, err := json.Marshal(Vendors)
 	if err != nil {
 		logwritter.Err("Error in getServices JSON marchslling")
 		fmt.Println("Error in getDefaultServices JSON marchslling")
@@ -341,7 +338,6 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 	S := string(jsonInfo)
 	fmt.Println(S)
 	return S
-
 
 	//return result
 
@@ -370,17 +366,16 @@ func Distance(lat1, lon1, lat2, lon2 float64) float64 {
 	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
 
 	return 2 * r * math.Asin(math.Sqrt(h))*/
-	point1 := geo.NewPoint(lat1,lon1)
-	point2 := geo.NewPoint(lat2,lon2)
-
+	point1 := geo.NewPoint(lat1, lon1)
+	point2 := geo.NewPoint(lat2, lon2)
 
 	// find the great circle distance between them
 	dist := point1.GreatCircleDistance(point2)
-	return dist;
+	return dist
 
 }
 
-func insertVendor(name string,latitude string,longitude string,couponcode string,biztype string) {
+func insertVendor(name string, latitude string, longitude string, couponcode string, biztype string) {
 	logwritter.Notice("Requesting insert Vendor")
 	db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 	checkErr(err)
@@ -388,7 +383,7 @@ func insertVendor(name string,latitude string,longitude string,couponcode string
 	stmt, err := db.Prepare("INSERT vendors SET name=?,latitude=?,longitude=?,couponcode=?,biztype=?")
 	checkErr(err)
 
-	res, err := stmt.Exec(name,latitude,longitude,couponcode,biztype)
+	res, err := stmt.Exec(name, latitude, longitude, couponcode, biztype)
 	checkErr(err)
 
 	res.LastInsertId()
@@ -405,21 +400,20 @@ func insertUser(fname string, lname string, emailid string, password string) {
 	stmt, err := db.Prepare("INSERT users SET fname=?,lname=?,emailid=?,password=?")
 	checkErr(err)
 
-	res, err := stmt.Exec(fname,lname,emailid,password)
+	res, err := stmt.Exec(fname, lname, emailid, password)
 	checkErr(err)
 
 	res.LastInsertId()
 
-	var Users = make(UserList,1)
+	var Users = make(UserList, 1)
 
-
-	Users[0].fname=fname
-	Users[0].lname=lname
-	Users[0].emailid=emailid
+	Users[0].fname = fname
+	Users[0].lname = lname
+	Users[0].emailid = emailid
 
 	db.Close()
 
-	jsonInfo,err := json.Marshal(Users)
+	jsonInfo, err := json.Marshal(Users)
 	if err != nil {
 		logwritter.Err("Error in insertUser JSON marchslling")
 		fmt.Println("Error in JSON marchslling")
@@ -436,7 +430,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 	var httpMethod = r.Method
 	//fmt.Println(httpMethod)
 
-	if strings.EqualFold(httpMethod,"POST") {
+	if strings.EqualFold(httpMethod, "POST") {
 		//var u Customer
 		if r.Body == nil {
 			logwritter.Err("Unable to read HTTP Method")
@@ -450,7 +444,6 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-
 
 		var jsonBody map[string]string
 
@@ -475,9 +468,8 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 
 		res.LastInsertId()
-		logwritter.Notice("User with username "+username+" Inserted")
+		logwritter.Notice("User with username " + username + " Inserted")
 		db.Close()
-
 
 		var Vendors = map[string]string{}
 
@@ -503,18 +495,17 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Error in AddUser JSON marchslling")
 		}
 
-		w.Header().Add("Content-Type","application/json")
+		w.Header().Add("Content-Type", "application/json")
 		w.Write(jsonInfo)
 		S := string(jsonInfo)
 		//fmt.Printf("%+v", S)
 		fmt.Println(S)
 		//fmt.Fprintf(w, "%s",S)
 
-	}else{
+	} else {
 		logwritter.Err("AddUser - HTTP Method not supported")
-		http.Error(w,"Method not supported",400)
+		http.Error(w, "Method not supported", 400)
 	}
-
 
 }
 
@@ -551,11 +542,11 @@ func UserRoute(w http.ResponseWriter, r *http.Request) {
 		Privacy(w, r)
 	case regexSmartParking.MatchString(r.URL.Path):
 		SmartParking(w, r)
-	case regexDeleteUser.MatchString(r.URL.Path) && strings.EqualFold(r.Method,"DELETE"):
+	case regexDeleteUser.MatchString(r.URL.Path) && strings.EqualFold(r.Method, "DELETE"):
 		DeleteUser(w, r)
-	case regexGetUser.MatchString(r.URL.Path) && strings.EqualFold(r.Method,"GET"):
+	case regexGetUser.MatchString(r.URL.Path) && strings.EqualFold(r.Method, "GET"):
 		GetUser(w, r)
-	case regexSensor.MatchString(r.URL.Path) && strings.EqualFold(r.Method,"PUT"):
+	case regexSensor.MatchString(r.URL.Path) && strings.EqualFold(r.Method, "PUT"):
 		Sensor(w, r)
 	case regexPark.MatchString(r.URL.Path):
 		Parking(w, r)
@@ -565,17 +556,17 @@ func UserRoute(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Profile(w http.ResponseWriter, r *http.Request){
+func Profile(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Profile Add")
 	if strings.EqualFold(r.Method, "PUT") {
-	      arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"user") && strings.EqualFold(arrTemp[3],"profile"){
-			username :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "profile") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?", username)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -595,7 +586,7 @@ func Profile(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(username,name) {
+			if strings.EqualFold(username, name) {
 
 				if r.Body == nil {
 					http.Error(w, "Please send a request body", 400)
@@ -609,7 +600,6 @@ func Profile(w http.ResponseWriter, r *http.Request){
 
 				var jsonBody map[string]string
 
-
 				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
 					logwritter.Err("Error in Profile JSON unmarchslling")
 					fmt.Print(err2.Error())
@@ -620,7 +610,7 @@ func Profile(w http.ResponseWriter, r *http.Request){
 				zipcode := jsonBody["zipCode"]
 				carLicensePlat := jsonBody["carLicensePlat"]
 
-				fmt.Println(billingContact,address,email,zipcode,carLicensePlat)
+				fmt.Println(billingContact, address, email, zipcode, carLicensePlat)
 
 				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 				checkErr(err)
@@ -628,11 +618,11 @@ func Profile(w http.ResponseWriter, r *http.Request){
 				stmt, err := db.Prepare("INSERT profiles SET billingContact=?,address=?,email=?,zipcode=?,carLicensePlat=?,username=?")
 				checkErr(err)
 
-				res, err := stmt.Exec(billingContact, address, email, zipcode, carLicensePlat,username)
+				res, err := stmt.Exec(billingContact, address, email, zipcode, carLicensePlat, username)
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Profile for username "+username+" Inserted")
+				logwritter.Notice("Profile for username " + username + " Inserted")
 
 				db.Close()
 
@@ -661,7 +651,7 @@ func Profile(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in Profile JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
@@ -677,17 +667,17 @@ func Profile(w http.ResponseWriter, r *http.Request){
 
 }
 
-func Privacy(w http.ResponseWriter, r *http.Request){
+func Privacy(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Privacy Add")
 	if strings.EqualFold(r.Method, "PUT") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"user") && strings.EqualFold(arrTemp[3],"privacy"){
-			username :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "privacy") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?", username)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -708,7 +698,7 @@ func Privacy(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(username,name) {
+			if strings.EqualFold(username, name) {
 
 				if r.Body == nil {
 					http.Error(w, "Please send a request body", 400)
@@ -720,23 +710,18 @@ func Privacy(w http.ResponseWriter, r *http.Request){
 					return
 				}
 
-
 				var jsonBody map[string]string
-
 
 				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
 					logwritter.Err("Unable to read username from database")
 					fmt.Print(err2.Error())
 				}
 
-
 				shareLicencePlate := jsonBody["shareLicencePlate"]
 				shareParkingDuration := jsonBody["shareParkingDuration"]
 				shareServiceUsages := jsonBody["shareServiceUsages"]
 
-
 				//fmt.Println(billingContact,address,email,zipcode,carLicensePlat)
-
 
 				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 				checkErr(err)
@@ -744,11 +729,11 @@ func Privacy(w http.ResponseWriter, r *http.Request){
 				stmt, err := db.Prepare("INSERT privacy SET shareLicencePlate=?,shareParkingDuration=?,username=?,shareServiceUsages=?")
 				checkErr(err)
 
-				res, err := stmt.Exec(shareLicencePlate, shareParkingDuration,username,shareServiceUsages)
+				res, err := stmt.Exec(shareLicencePlate, shareParkingDuration, username, shareServiceUsages)
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Privacy details for username "+username+" Inserted")
+				logwritter.Notice("Privacy details for username " + username + " Inserted")
 
 				db.Close()
 
@@ -777,7 +762,7 @@ func Privacy(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in Privacy JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
@@ -793,17 +778,17 @@ func Privacy(w http.ResponseWriter, r *http.Request){
 
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request){
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Delete User")
 	if strings.EqualFold(r.Method, "DELETE") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"user") {
-			username :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "user") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?", username)
 			if err != nil {
 				logwritter.Err("Unable to read username from database")
 				log.Fatal(err)
@@ -825,8 +810,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(username,name) {
-
+			if strings.EqualFold(username, name) {
 
 				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 				checkErr(err)
@@ -862,7 +846,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 				checkErr(err5)
 				res5.RowsAffected()
 
-				logwritter.Notice("User username "+username+" Deleted")
+				logwritter.Notice("User username " + username + " Deleted")
 
 				db.Close()
 
@@ -883,14 +867,12 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in DeleteUser JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
 				fmt.Println(S)
 				//fmt.Fprintf(w, "%s",S)
-
-
 
 			}
 		}
@@ -899,15 +881,15 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request){
+func GetUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Performing Get User")
 	if strings.EqualFold(r.Method, "GET") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		RemoteIP := strings.Split(r.RemoteAddr,":")
+		arrTemp := strings.Split(r.URL.Path, "/")
+		RemoteIP := strings.Split(r.RemoteAddr, ":")
 		IPAddress := RemoteIP[0]
 		fmt.Println(IPAddress)
-		if strings.EqualFold(arrTemp[1],"user") {
-			username :=arrTemp[2]
+		if strings.EqualFold(arrTemp[1], "user") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
@@ -917,7 +899,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 			//var counter int = 0
 			//var vendor GetUserstruct
 
-			rows1, err1 := db.Query("SELECT email FROM customers WHERE username=?",username )
+			rows1, err1 := db.Query("SELECT email FROM customers WHERE username=?", username)
 			logwritter.Notice("Reading user data from database")
 			if err1 != nil {
 				logwritter.Err("Error connecting to database")
@@ -939,7 +921,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				log.Fatal(err1)
 			}
 
-			rows2, err2 := db.Query("SELECT billingContact,address,email,zipcode,carLicensePlat FROM profiles WHERE username=?",username )
+			rows2, err2 := db.Query("SELECT billingContact,address,email,zipcode,carLicensePlat FROM profiles WHERE username=?", username)
 			logwritter.Notice("Reading user data from database")
 			if err2 != nil {
 				logwritter.Err("Error connecting to database")
@@ -954,7 +936,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				var carLicensePlat string
 				var email string
 
-				if err2 := rows2.Scan(&billingContact,&address,&email,&zipcode,&carLicensePlat); err2 != nil {
+				if err2 := rows2.Scan(&billingContact, &address, &email, &zipcode, &carLicensePlat); err2 != nil {
 					log.Fatal(err2)
 				}
 				Vendors["billingContact"] = billingContact
@@ -968,7 +950,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				log.Fatal(err2)
 			}
 
-			rows3, err3 := db.Query("SELECT shareLicencePlate,shareParkingDuration,shareServiceUsages FROM privacy WHERE username=?",username )
+			rows3, err3 := db.Query("SELECT shareLicencePlate,shareParkingDuration,shareServiceUsages FROM privacy WHERE username=?", username)
 			logwritter.Notice("Reading user data from database")
 			if err3 != nil {
 				logwritter.Err("Error connecting to database")
@@ -980,7 +962,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				var shareParkingDuration string
 				var shareServiceUsages string
 
-				if err3 := rows3.Scan(&shareLicencePlate,&shareParkingDuration,&shareServiceUsages); err3 != nil {
+				if err3 := rows3.Scan(&shareLicencePlate, &shareParkingDuration, &shareServiceUsages); err3 != nil {
 					log.Fatal(err3)
 				}
 				Vendors["shareLicencePlate"] = shareLicencePlate
@@ -993,7 +975,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				log.Fatal(err3)
 			}
 
-			rows4, err4 := db.Query("SELECT occupyTimeStamp,leaveTimeStamp,duration,parkingId,usageServices FROM smartparking WHERE username=?",username )
+			rows4, err4 := db.Query("SELECT occupyTimeStamp,leaveTimeStamp,duration,parkingId,usageServices FROM smartparking WHERE username=?", username)
 			logwritter.Notice("Reading user data from database")
 			if err4 != nil {
 				logwritter.Err("Error connecting to database")
@@ -1007,7 +989,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				var parkingId string
 				var usageServices string
 
-				if err4 := rows4.Scan(&occupyTimeStamp,&leaveTimeStamp,&duration,&parkingId,&usageServices); err4 != nil {
+				if err4 := rows4.Scan(&occupyTimeStamp, &leaveTimeStamp, &duration, &parkingId, &usageServices); err4 != nil {
 					log.Fatal(err4)
 				}
 
@@ -1025,7 +1007,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 			db.Close()
 
-			jsonInfo,err := json.Marshal(Vendors)
+			jsonInfo, err := json.Marshal(Vendors)
 			if err != nil {
 				logwritter.Err("Error in GetUser JSON marchslling")
 				fmt.Println("Error in GetUser JSON marchslling")
@@ -1034,7 +1016,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 			S := string(jsonInfo)
 			fmt.Println(S)
 			w.Write(jsonInfo)
-			logwritter.Notice("Client IP Address: "+IPAddress)
+			logwritter.Notice("Client IP Address: " + IPAddress)
 			logwritter.Notice("Get User details rendered")
 
 			//return S
@@ -1045,17 +1027,17 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 }
 
-func SmartParking(w http.ResponseWriter, r *http.Request){
+func SmartParking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting SmartParking")
 	if strings.EqualFold(r.Method, "PUT") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"user") && strings.EqualFold(arrTemp[3],"smartparking"){
-			username :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "smartparking") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?", username)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -1073,7 +1055,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(username,name) {
+			if strings.EqualFold(username, name) {
 
 				if r.Body == nil {
 					http.Error(w, "Please send a request body", 400)
@@ -1086,7 +1068,6 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				}
 
 				var jsonBody map[string]string
-
 
 				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
 					fmt.Print(err2.Error())
@@ -1106,11 +1087,11 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				stmt, err := db.Prepare("INSERT smartparking SET occupyTimeStamp=?,leaveTimeStamp=?,duration=?,parkingId=?,username=?,usageServices=?")
 				checkErr(err)
 
-				res, err := stmt.Exec(occupyTimeStamp, leaveTimeStamp, duration, parkingId,username,usageServices)
+				res, err := stmt.Exec(occupyTimeStamp, leaveTimeStamp, duration, parkingId, username, usageServices)
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Parking info for username "+username+" Inserted")
+				logwritter.Notice("Parking info for username " + username + " Inserted")
 
 				//db.Close()
 
@@ -1139,14 +1120,14 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in SmartParking JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
 				fmt.Println(S)
 				//fmt.Fprintf(w, "%s",S)
 
-				rows1, err1 := db.Query("SELECT carLicensePlat FROM profiles WHERE username=?",username )
+				rows1, err1 := db.Query("SELECT carLicensePlat FROM profiles WHERE username=?", username)
 				logwritter.Notice("Reading user data from database")
 				if err1 != nil {
 					logwritter.Err("Error connecting to database")
@@ -1158,7 +1139,6 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				var carLicensePlat string
 				for rows1.Next() {
 
-
 					if err1 := rows1.Scan(&carLicensePlat); err1 != nil {
 						log.Fatal(err1)
 					}
@@ -1169,12 +1149,11 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 					logwritter.Err("Error in fetching data from database")
 					log.Fatal(err1)
 				}
-				if(strings.EqualFold(usageServices,"")==false) {
+				if strings.EqualFold(usageServices, "") == false {
 					SendPO("http://127.0.0.1:9443/", carLicensePlat, parkingId)
 				}
 
 				db.Close()
-
 
 			}
 
@@ -1184,13 +1163,12 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-func SendPO(url string,carLicensePlat string,parkingId string){
+func SendPO(url string, carLicensePlat string, parkingId string) {
 
 	var PO = map[string]string{}
 
 	PO["carLicensePlat"] = carLicensePlat
 	PO["parkingId"] = parkingId
-
 
 	//fmt.Println(Vendors)
 
@@ -1202,7 +1180,6 @@ func SendPO(url string,carLicensePlat string,parkingId string){
 
 	//var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonInfo))
-
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -1217,17 +1194,17 @@ func SendPO(url string,carLicensePlat string,parkingId string){
 	fmt.Println("response Body:", string(body))
 }
 
-func Parking(w http.ResponseWriter, r *http.Request){
+func Parking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Parking")
 	if strings.EqualFold(r.Method, "POST") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"user") && strings.EqualFold(arrTemp[3],"park"){
-			username :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "park") {
+			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT username FROM customers WHERE username=?",username)
+			rows, err := db.Query("SELECT username FROM customers WHERE username=?", username)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -1245,7 +1222,7 @@ func Parking(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(username,name) {
+			if strings.EqualFold(username, name) {
 
 				if r.Body == nil {
 					http.Error(w, "Please send a request body", 400)
@@ -1258,7 +1235,6 @@ func Parking(w http.ResponseWriter, r *http.Request){
 				}
 
 				var jsonBody map[string]string
-
 
 				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
 					fmt.Print(err2.Error())
@@ -1274,11 +1250,11 @@ func Parking(w http.ResponseWriter, r *http.Request){
 				stmt, err := db.Prepare("INSERT parking SET Parkingid=?,username=?")
 				checkErr(err)
 
-				res, err := stmt.Exec(Parkingid,username)
+				res, err := stmt.Exec(Parkingid, username)
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Parking info associated with username "+username+" Inserted")
+				logwritter.Notice("Parking info associated with username " + username + " Inserted")
 
 				db.Close()
 
@@ -1307,7 +1283,7 @@ func Parking(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in Parking JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
@@ -1321,17 +1297,17 @@ func Parking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-func Sensor(w http.ResponseWriter, r *http.Request){
+func Sensor(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Processing Sensor Data")
 	if strings.EqualFold(r.Method, "PUT") {
-		arrTemp := strings.Split(r.URL.Path,"/")
-		if strings.EqualFold(arrTemp[1],"park"){
-			Parkingid :=arrTemp[2]
+		arrTemp := strings.Split(r.URL.Path, "/")
+		if strings.EqualFold(arrTemp[1], "park") {
+			Parkingid := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
 
 			//var result string = ""
-			rows, err := db.Query("SELECT Parkingid FROM parking WHERE Parkingid=?",Parkingid)
+			rows, err := db.Query("SELECT Parkingid FROM parking WHERE Parkingid=?", Parkingid)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -1349,7 +1325,7 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 			}
 			db.Close()
 
-			if strings.EqualFold(Parkingid,name) {
+			if strings.EqualFold(Parkingid, name) {
 
 				if r.Body == nil {
 					http.Error(w, "Please send a request body", 400)
@@ -1362,7 +1338,6 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 				}
 
 				var jsonBody map[string]string
-
 
 				if err2 := json.Unmarshal(body, &jsonBody); err2 != nil {
 					fmt.Print(err2.Error())
@@ -1378,11 +1353,11 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 				stmt, err := db.Prepare("UPDATE parking SET Parkingid=?,Occupied=?")
 				checkErr(err)
 
-				res, err := stmt.Exec(Parkingid,Occupied)
+				res, err := stmt.Exec(Parkingid, Occupied)
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Sensor Data for Parkingid "+Parkingid+" updated")
+				logwritter.Notice("Sensor Data for Parkingid " + Parkingid + " updated")
 
 				db.Close()
 
@@ -1411,7 +1386,7 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 					fmt.Println("Error in Sensor JSON marchslling")
 				}
 
-				w.Header().Add("Content-Type","application/json")
+				w.Header().Add("Content-Type", "application/json")
 				w.Write(jsonInfo)
 				S := string(jsonInfo)
 				//fmt.Printf("%+v", S)
@@ -1425,7 +1400,7 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-var logwritter, err = syslog.New(syslog.LOG_ERR,"CMPE295B")
+var logwritter, err = syslog.New(syslog.LOG_ERR, "CMPE295B")
 
 func main() {
 
@@ -1435,7 +1410,7 @@ func main() {
 	defer logwritter.Close()
 	if err != nil {
 		log.Fatal("Error in the System")
-	}else {
+	} else {
 		logwritter.Notice("Starting Server")
 		http.HandleFunc("/insertvendor", handler)
 		http.HandleFunc("/insertuser", handlerUser)
@@ -1445,8 +1420,8 @@ func main() {
 		//http.HandleFunc("/addprofile", AddProfile)
 		http.HandleFunc("/", UserRoute)
 
-		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		logwritter.Err("Unable to Start Server")
 		fmt.Println("Server finished 456.....")
 		if err != nil {
