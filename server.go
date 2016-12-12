@@ -347,33 +347,6 @@ func getDefaultServices(uLatitude string,uLongitude string) string {
 
 }
 
-/*
-func AddProfile1(w http.ResponseWriter, r *http.Request) {
-
-	var httpMethod = r.Method
-	fmt.Println(httpMethod)
-
-	if strings.EqualFold(httpMethod, "PUT") {
-		//var u Customer
-		if r.Body == nil {
-			http.Error(w, "Please send a request body", 400)
-			return
-		}
-		//err := json.NewDecoder(r.Body).Decode(&u)
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		var str = r.RequestURI
-		fmt.Println(str)
-		fmt.Println(body)
-
-	}
-}
-*/
-
 func hsin(theta float64) float64 {
 	logwritter.Notice("Performing hsin calculation")
 	return math.Pow(math.Sin(theta/2), 2)
@@ -406,36 +379,6 @@ func Distance(lat1, lon1, lat2, lon2 float64) float64 {
 	return dist;
 
 }
-
-/*func getList(requestbiztype string,requestdistance float64,userLongitude float64,userLatitude float64) string {
-	db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
-	checkErr(err)
-
-
-	rows,err := db.Query("select * from vendors")
-	checkErr(err)
-
-	for rows.Next(){
-		var name string
-		var longitude float64
-		var latitude float64
-		var couponcode int
-		var biztype string
-		err = rows.Scan(&name,&longitude,&latitude,&couponcode,&biztype)
-		checkErr(err)
-
-		if strings.EqualFold(biztype,requestbiztype){
-			var distance = Distance(longitude,latitude,userLongitude,userLatitude)
-			if distance <= requestdistance{
-
-			}
-		}
-
-	}
-
-
-
-}*/
 
 func insertVendor(name string,latitude string,longitude string,couponcode string,biztype string) {
 	logwritter.Notice("Requesting insert Vendor")
@@ -671,7 +614,6 @@ func Profile(w http.ResponseWriter, r *http.Request){
 					logwritter.Err("Error in Profile JSON unmarchslling")
 					fmt.Print(err2.Error())
 				}
-
 				billingContact := jsonBody["billingContact"]
 				address := jsonBody["address"]
 				email := jsonBody["email"]
@@ -961,6 +903,9 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 	logwritter.Notice("Performing Get User")
 	if strings.EqualFold(r.Method, "GET") {
 		arrTemp := strings.Split(r.URL.Path,"/")
+		RemoteIP := strings.Split(r.RemoteAddr,":")
+		IPAddress := RemoteIP[0]
+		fmt.Println(IPAddress)
 		if strings.EqualFold(arrTemp[1],"user") {
 			username :=arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
@@ -1078,31 +1023,6 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				log.Fatal(err4)
 			}
 
-/*
-			rows5, err5 := db.Query("SELECT email FROM parking WHERE username=?",username )
-			logwritter.Notice("Reading user selected services from database")
-			if err5 != nil {
-				logwritter.Err("Error connecting to database")
-				log.Fatal(err5)
-
-			}
-			defer rows5.Close()
-			for rows5.Next() {
-				var email string
-
-				if err5 := rows5.Scan(&email); err5 != nil {
-					log.Fatal(err)
-				}
-				vendor.email=email
-				Vendors = append(Vendors,vendor)
-
-			}
-			if err5 := rows5.Err(); err5 != nil {
-				logwritter.Err("Error in fetching data from database")
-				log.Fatal(err5)
-			}
-
-*/
 			db.Close()
 
 			jsonInfo,err := json.Marshal(Vendors)
@@ -1114,6 +1034,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 			S := string(jsonInfo)
 			fmt.Println(S)
 			w.Write(jsonInfo)
+			logwritter.Notice("Client IP Address: "+IPAddress)
 			logwritter.Notice("Get User details rendered")
 
 			//return S
@@ -1191,7 +1112,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				res.LastInsertId()
 				logwritter.Notice("Parking info for username "+username+" Inserted")
 
-				db.Close()
+				//db.Close()
 
 				var Vendors = map[string]string{}
 
@@ -1224,9 +1145,35 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 				//fmt.Printf("%+v", S)
 				fmt.Println(S)
 				//fmt.Fprintf(w, "%s",S)
-				SendPO("http://127.0.0.1:9443/")
+
+				rows1, err1 := db.Query("SELECT carLicensePlat FROM profiles WHERE username=?",username )
+				logwritter.Notice("Reading user data from database")
+				if err1 != nil {
+					logwritter.Err("Error connecting to database")
+					log.Fatal(err1)
+
+				}
+
+				defer rows1.Close()
+				var carLicensePlat string
+				for rows1.Next() {
 
 
+					if err1 := rows1.Scan(&carLicensePlat); err1 != nil {
+						log.Fatal(err1)
+					}
+
+					//fmt.Println(Vendors)
+				}
+				if err1 := rows1.Err(); err1 != nil {
+					logwritter.Err("Error in fetching data from database")
+					log.Fatal(err1)
+				}
+				if(strings.EqualFold(usageServices,"")==false) {
+					SendPO("http://127.0.0.1:9443/", carLicensePlat, parkingId)
+				}
+
+				db.Close()
 
 
 			}
@@ -1237,87 +1184,24 @@ func SmartParking(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-/*
-func failOnError1(err error, msg string) {
+func SendPO(url string,carLicensePlat string,parkingId string){
+
+	var PO = map[string]string{}
+
+	PO["carLicensePlat"] = carLicensePlat
+	PO["parkingId"] = parkingId
+
+
+	//fmt.Println(Vendors)
+
+	jsonInfo, err := json.Marshal(PO)
 	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
-	}
-}
-
-func GetMessages(){
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	err = ch.ExchangeDeclare(
-		"logs_topic", // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-	failOnError(err, "Failed to declare an exchange")
-
-	q, err := ch.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when usused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-
-	if len(os.Args) < 2 {
-		log.Printf("Usage: %s [binding_key]...", os.Args[0])
-		os.Exit(0)
-	}
-	for _, s := range os.Args[1:] {
-		log.Printf("Binding queue %s to exchange %s with routing key %s",
-			q.Name, "logs_topic", s)
-		err = ch.QueueBind(
-			q.Name,       // queue name
-			s,            // routing key
-			"logs_topic", // exchange
-			false,
-			nil)
-		failOnError(err, "Failed to bind a queue")
+		logwritter.Err("Error in Parking JSON marchslling")
+		fmt.Println("Error in Parking JSON marchslling")
 	}
 
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto ack
-		false,  // exclusive
-		false,  // no local
-		false,  // no wait
-		nil,    // args
-	)
-	failOnError(err, "Failed to register a consumer")
-
-	forever := make(chan bool)
-
-	go func() {
-		for d := range msgs {
-			log.Printf(" [x] %s", d.Body)
-		}
-	}()
-
-	log.Printf(" [*] Waiting for logs. To exit press CTRL+C")
-	<-forever
-}
-*/
-
-func SendPO(url string){
-	var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	//var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonInfo))
 
 
 	client := &http.Client{}
@@ -1332,6 +1216,7 @@ func SendPO(url string){
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(body))
 }
+
 func Parking(w http.ResponseWriter, r *http.Request){
 	logwritter.Notice("Requesting Parking")
 	if strings.EqualFold(r.Method, "POST") {
@@ -1540,7 +1425,6 @@ func Sensor(w http.ResponseWriter, r *http.Request){
 	//w.Write([]byte("DONE"))
 }
 
-
 var logwritter, err = syslog.New(syslog.LOG_ERR,"CMPE295B")
 
 func main() {
@@ -1561,8 +1445,8 @@ func main() {
 		//http.HandleFunc("/addprofile", AddProfile)
 		http.HandleFunc("/", UserRoute)
 
-		//error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
-		error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
+		error := http.ListenAndServeTLS(":8443", "/Users/VKONEPAL/IdeaProjects/vkr/server.crt", "/Users/VKONEPAL/IdeaProjects/vkr/server.key", nil)
+		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		logwritter.Err("Unable to Start Server")
 		fmt.Println("Server finished 456.....")
 		if err != nil {
