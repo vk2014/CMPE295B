@@ -1,5 +1,6 @@
 // Copyright Cisco Systems, Inc.
 // All Rights Reserved.
+// Author Vishnu Konepalli @ vkonepal@cisco.com
 // This package provides the server functionality for rendering different services for each client request
 package main
 
@@ -108,10 +109,6 @@ type UserPrivacy struct {
 	privacy Privacytype
 }
 
-/*type VendorList struct {
-	Vendors []Vendor
-}*/
-
 func checkErr(err error) {
 	if err != nil {
 		logwritter.Notice("Error connecting to database")
@@ -119,27 +116,13 @@ func checkErr(err error) {
 	}
 }
 
-type test_struct struct {
-	Test string
-}
-
-func parsePost(rw http.ResponseWriter, request *http.Request) {
-	decoder := json.NewDecoder(request.Body)
-	fmt.Println(decoder)
-	/*
-		var t test_struct
-		err := json.Unmarshal(decoder,&t)
-
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(t)
-		fmt.Println(t.Test)
-	*/
-}
-
 func handler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+
 	name := r.URL.Query().Get("name")
 	longitude := r.URL.Query().Get("longitude")
 	latitude := r.URL.Query().Get("latitude")
@@ -153,6 +136,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func handlerUser(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+
 	fname := r.URL.Query().Get("fname")
 	fmt.Println(fname)
 	lname := r.URL.Query().Get("lname")
@@ -167,6 +155,11 @@ func handlerUser(w http.ResponseWriter, r *http.Request) {
 
 func handlerServices(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+
 	userLongitude := r.URL.Query().Get("longitude")
 	userLatitude := r.URL.Query().Get("latitude")
 	userService := r.URL.Query().Get("type")
@@ -178,6 +171,11 @@ func handlerServices(w http.ResponseWriter, r *http.Request) {
 
 func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+
 	userLongitude := r.URL.Query().Get("longitude")
 	userLatitude := r.URL.Query().Get("latitude")
 
@@ -366,6 +364,7 @@ func Distance(lat1, lon1, lat2, lon2 float64) float64 {
 	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
 
 	return 2 * r * math.Asin(math.Sqrt(h))*/
+
 	point1 := geo.NewPoint(lat1, lon1)
 	point2 := geo.NewPoint(lat2, lon2)
 
@@ -427,6 +426,10 @@ func insertUser(fname string, lname string, emailid string, password string) {
 
 func AddUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Add User")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	var httpMethod = r.Method
 	//fmt.Println(httpMethod)
 
@@ -558,6 +561,10 @@ func UserRoute(w http.ResponseWriter, r *http.Request) {
 
 func Profile(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Profile Add")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "profile") {
@@ -669,6 +676,10 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 
 func Privacy(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Privacy Add")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "privacy") {
@@ -780,6 +791,10 @@ func Privacy(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Delete User")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "DELETE") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") {
@@ -883,11 +898,15 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Performing Get User")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "GET") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		RemoteIP := strings.Split(r.RemoteAddr, ":")
 		IPAddress := RemoteIP[0]
-		fmt.Println(IPAddress)
+		fmt.Println("Processing request from Client IP Address: "+IPAddress)
 		if strings.EqualFold(arrTemp[1], "user") {
 			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
@@ -1029,6 +1048,10 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func SmartParking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting SmartParking")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "smartparking") {
@@ -1150,6 +1173,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request) {
 					log.Fatal(err1)
 				}
 				if strings.EqualFold(usageServices, "") == false {
+					logwritter.Notice("Sending PO as usageServices has be chosen!")
 					SendPO("http://127.0.0.1:9443/", carLicensePlat, parkingId)
 				}
 
@@ -1174,8 +1198,8 @@ func SendPO(url string, carLicensePlat string, parkingId string) {
 
 	jsonInfo, err := json.Marshal(PO)
 	if err != nil {
-		logwritter.Err("Error in Parking JSON marchslling")
-		fmt.Println("Error in Parking JSON marchslling")
+		logwritter.Err("Error in SendPO JSON marchslling")
+		fmt.Println("Error in SendPO JSON marchslling")
 	}
 
 	//var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
@@ -1188,14 +1212,18 @@ func SendPO(url string, carLicensePlat string, parkingId string) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(body))
 }
 
 func Parking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Parking")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "POST") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "park") {
@@ -1299,6 +1327,10 @@ func Parking(w http.ResponseWriter, r *http.Request) {
 
 func Sensor(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Processing Sensor Data")
+	RemoteIP := strings.Split(r.RemoteAddr, ":")
+	IPAddress := RemoteIP[0]
+	fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "park") {
@@ -1404,7 +1436,7 @@ var logwritter, err = syslog.New(syslog.LOG_ERR, "CMPE295B")
 
 func main() {
 
-	fmt.Println("Server started 123.....")
+	fmt.Println("Server started on port 8443.....")
 
 	//logwritter,err := syslog.New(syslog.LOG_ERR,"CMPE295B")
 	defer logwritter.Close()
