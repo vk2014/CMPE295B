@@ -1,19 +1,18 @@
-  curl -k -X POST -d "{\"username\": \"vishnu\", \"email\": \"vishnu@cisco.com\", \"password\": \"vishnu123\"}" https://localhost:8443/user
+curl -k -X POST -d "{\"username\": \"vishnu\", \"email\": \"vishnu@cisco.com\", \"password\": \"vishnu123\"}" https://localhost:8443/user
   
-  curl -k -X PUT -d "{\"billingContact\": \"Vishnu Konepalli\", \"email\": \"vishnu@cisco.com\", \"address\": \"3550 Cisco Way San Jose CA 95134\", \"zipCode\": \"95134\", \"carLicensePlat\": \"5jdg099\"}" https://localhost:8443/user/vishnu/profile
+curl -k -X PUT -d "{\"billingContact\": \"Vishnu Konepalli\", \"email\": \"vishnu@cisco.com\", \"address\": \"3550 Cisco Way San Jose CA 95134\", \"zipCode\": \"95134\", \"carLicensePlat\": \"5jdg099\"}" https://localhost:8443/user/vishnu/profile
   
-  curl -k -X POST -d "{\"Parkingid\": \"A123\"}" https://localhost:8443/user/vishnu/park
+curl -k -X POST -d "{\"Parkingid\": \"A123\"}" https://localhost:8443/user/vishnu/park
   
-  curl -k -X PUT -d "{\"shareLicencePlate\": \"Yes\", \"shareParkingDuration\": \"4\",\"shareServiceUsages\": \"Yes\"}" https://localhost:8443/user/vishnu/privacy
+curl -k -X PUT -d "{\"shareLicencePlate\": \"Yes\", \"shareParkingDuration\": \"Yes\",\"shareServiceUsages\": \"Yes\"}" https://localhost:8443/user/vishnu/privacy
   
-  curl -k -X PUT -d "{\"occupyTimeStamp\": \"09:15\", \"leaveTimeStamp\": \"12:15\", \"duration\": \"180\", \"parkingId\": \"A123\", \"usageServices\": \"Oil\"}" https://localhost:8443/user/vishnu/smartparking
+curl -k -X PUT -d "{\"occupyTimeStamp\": \"09:15\", \"leaveTimeStamp\": \"12:15\", \"duration\": \"180\", \"parkingId\": \"A123\", \"usageServices\": \"Oil\"}" https://localhost:8443/user/vishnu/smartparking
   
-  curl -k -X DELETE https://localhost:8443/user/vishnu
-  
-  curl https://localhost:8443/user/vishnu
+curl -k -X PUT -d "{\"Occupied\": \"1\"}" https://localhost:8443/park/A123
 
-curl -k -X PUT -d "{\"Occupied\": \"1\"}" https://128.107.1.74:8443/park/A123
-{"message":"Sensor Info Saved","messageCode":"200","status":"OK"}
+curl https://localhost:8443/user/vishnu
+
+curl -k -X DELETE https://localhost:8443/user/vishnu
 
 cd go
 VKONEPAL-M-W3Q8:go VKONEPAL$ pwd
@@ -23,37 +22,26 @@ VKONEPAL-M-W3Q8:go VKONEPAL$ pwd
 /Users/VKONEPAL/go
 VKONEPAL-M-W3Q8:go VKONEPAL$ go get github.com/streadway/amqp
 
-
-
 curl -k -X POST -d "{\"username\": \"vishnu\", \"email\": \"vishnu@cisco.com\", \"password\": \"vishnu123\"}" https://128.107.1.74:8443/user
-{"message":"User","status":"Added","username":"vishnu"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X PUT -d "{\"billingContact\": \"3550 Cisco Way\", \"email\": \"vishnu@cisco.com\", \"address\": \"San Jose CA 95134\", \"zipCode\": \"95134\", \"carLicensePlat\": \"5jdg099\"}" https://128.107.1.74:8443/user/vishnu/profile
-{"message":"Profile Inserted","messageCode":"200","status":"OK"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X PUT -d "{\"shareLicencePlate\": \"Yes\", \"shareParkingDuration\": \"4\",\"shareServiceUsages\": \"Yes\"}" https://128.107.1.74:8443/user/vishnu/privacy
-{"message":"Privacy Info Saved","messageCode":"200","status":"OK"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X PUT -d "{\"occupyTimeStamp\": \"09:15\", \"leaveTimeStamp\": \"12:15\", \"duration\": \"180\", \"parkingId\": \"A123\", \"usageServices\": \"Oil\"}" https://128.107.1.74:8443/user/vishnu/smartparking
-{"message":"Parking Info Saved","messageCode":"200","status":"OK"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X POST -d "{\"Parkingid\": \"A123\"}" https://128.107.1.74:8443/user/vishnu/park
-{"message":"Parking Info Saved","messageCode":"200","status":"OK"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X DELETE https://localhost:8443/user/vishnu
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X DELETE https://128.107.1.74:8443/user/vishnu
-{"message":"User Deleted","messageCode":"200","status":"OK"}VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ {"address":"San Jose CA 95134","billingContact":"3550 Cisco Way","carLicensePlat":"5jdg099","duration":"180","email":"vishnu@cisco.com","leaveTimeStamp":"12:15","occupyTimeStamp":"09:15","parkingId":"A123","shareLicencePlate":"Yes","shareParkingDuration":"4","shareServiceUsages":"Yes","usageServices":"Oil","zipcode":"95134"}
--bash: address:San Jose CA 95134: command not found
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl https://128.107.1.74:8443/user/vishnu
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ 
-VKONEPAL-M-W3Q8:vkr VKONEPAL$ curl -k -X DELETE https://128.107.1.74:8443/user/vishnu
+{"message":"User","status":"Added","username":"vishnu"}
 
+curl -k -X PUT -d "{\"billingContact\": \"Vishnu Konepalli\", \"email\": \"vishnu@cisco.com\", \"address\": \"3550 Cisco Way San Jose CA 95134\", \"zipCode\": \"95134\", \"carLicensePlat\": \"5jdg099\"}" https://128.107.1.74:8443/user/vishnu/profile
+{"message":"Profile Inserted","messageCode":"200","status":"OK"}
+
+curl -k -X POST -d "{\"Parkingid\": \"A123\"}" https://128.107.1.74:8443/user/vishnu/park
+{"message":"Parking Info Saved","messageCode":"200","status":"OK"}
+
+curl -k -X PUT -d "{\"shareLicencePlate\": \"Yes\", \"shareParkingDuration\": \"Yes\",\"shareServiceUsages\": \"Yes\"}" https://128.107.1.74:8443/user/vishnu/privacy
+{"message":"Privacy Info Saved","messageCode":"200","status":"OK"}
+
+curl -k -X PUT -d "{\"occupyTimeStamp\": \"09:15\", \"leaveTimeStamp\": \"12:15\", \"duration\": \"180\", \"parkingId\": \"A123\", \"usageServices\": \"Oil\"}" https://128.107.1.74:8443/user/vishnu/smartparking
+{"message":"Parking Info Saved","messageCode":"200","status":"OK"}
+
+curl -k -X PUT -d "{\"Occupied\": \"1\"}" https://128.107.1.74:8443/park/A123
+{"message":"Sensor Info Saved","messageCode":"200","status":"OK"}
+
+curl https://128.107.1.74:8443/user/vishnu
+{"address":"3550 Cisco Way San Jose CA 95134","billingContact":"Vishnu Konepalli","carLicensePlat":"5jdg099","duration":"180","email":"vishnu@cisco.com","leaveTimeStamp":"12:15","occupyTimeStamp":"09:15","parkingId":"A123","shareLicencePlate":"Yes","shareParkingDuration":"Yes","shareServiceUsages":"Yes","usageServices":"Oil","zipcode":"95134"}
+
+curl -k -X DELETE https://128.107.1.74:8443/user/vishnu
+{"message":"User Deleted","messageCode":"200","status":"OK"}
