@@ -120,8 +120,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 
 	name := r.URL.Query().Get("name")
 	longitude := r.URL.Query().Get("longitude")
@@ -138,8 +137,7 @@ func handlerUser(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 
 	fname := r.URL.Query().Get("fname")
 	fmt.Println(fname)
@@ -157,7 +155,6 @@ func handlerServices(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
 	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 
 	userLongitude := r.URL.Query().Get("longitude")
@@ -173,7 +170,6 @@ func handlerDefaultServices(w http.ResponseWriter, r *http.Request) {
 	//fmt.Print(db.Ping())
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
 	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 
 	userLongitude := r.URL.Query().Get("longitude")
@@ -428,8 +424,8 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Add User")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//fmt.Println("Processing request from Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	var httpMethod = r.Method
 	//fmt.Println(httpMethod)
 
@@ -472,6 +468,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 
 		res.LastInsertId()
 		logwritter.Notice("User with username " + username + " Inserted")
+		logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Add user with username " + username)
 		db.Close()
 
 		var Vendors = map[string]string{}
@@ -515,28 +512,6 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 func UserRoute(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Performing User Requests")
 
-	/*var httpMethod = r.Method
-	fmt.Println(httpMethod)
-
-	if strings.EqualFold(httpMethod, "PUT") {
-	//var u Customer
-	if r.Body == nil {
-	http.Error(w, "Please send a request body", 400)
-	return
-	}
-	//err := json.NewDecoder(r.Body).Decode(&u)
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-	http.Error(w, err.Error(), 400)
-	return
-	}
-
-	var str = r.RequestURI
-	fmt.Println(str)
-	fmt.Println(body)
-	}
-	*/
-
 	fmt.Println(r.URL.Path)
 	switch {
 	case regexProfile.MatchString(r.URL.Path):
@@ -563,8 +538,7 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Profile Add")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "profile") {
@@ -617,7 +591,7 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 				zipcode := jsonBody["zipCode"]
 				carLicensePlat := jsonBody["carLicensePlat"]
 
-				fmt.Println(billingContact, address, email, zipcode, carLicensePlat)
+				//fmt.Println(billingContact, address, email, zipcode, carLicensePlat)
 
 				db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 				checkErr(err)
@@ -629,6 +603,7 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 				checkErr(err)
 
 				res.LastInsertId()
+				logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Profile Add for username " + username)
 				logwritter.Notice("Profile for username " + username + " Inserted")
 
 				db.Close()
@@ -678,8 +653,7 @@ func Privacy(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Privacy Add")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "privacy") {
@@ -744,6 +718,7 @@ func Privacy(w http.ResponseWriter, r *http.Request) {
 				checkErr(err)
 
 				res.LastInsertId()
+				logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Add Privacy details for username " + username)
 				logwritter.Notice("Privacy details for username " + username + " Inserted")
 
 				db.Close()
@@ -793,8 +768,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Delete User")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "DELETE") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") {
@@ -861,6 +835,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 				checkErr(err5)
 				res5.RowsAffected()
 
+				logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Delete request for username " + username)
 				logwritter.Notice("User username " + username + " Deleted")
 
 				db.Close()
@@ -900,8 +875,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Performing Get User")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "GET") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		RemoteIP := strings.Split(r.RemoteAddr, ":")
@@ -911,7 +885,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 			username := arrTemp[2]
 			db, err := sql.Open("mysql", "vkonepal:cisco123@/ms")
 			checkErr(err)
-
+			logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Get details for username " + username)
 			//var VendorId Vendor
 			var Vendors = map[string]string{}
 
@@ -1035,7 +1009,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 			S := string(jsonInfo)
 			fmt.Println(S)
 			w.Write(jsonInfo)
-			logwritter.Notice("Client IP Address: " + IPAddress)
+			//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Get details for username " + username)
 			logwritter.Notice("Get User details rendered")
 
 			//return S
@@ -1050,8 +1024,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting SmartParking")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "smartparking") {
@@ -1114,6 +1087,7 @@ func SmartParking(w http.ResponseWriter, r *http.Request) {
 				checkErr(err)
 
 				res.LastInsertId()
+				logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Parking information for username " + username)
 				logwritter.Notice("Parking info for username " + username + " Inserted")
 
 				//db.Close()
@@ -1222,8 +1196,7 @@ func Parking(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Requesting Parking")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "POST") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "user") && strings.EqualFold(arrTemp[3], "park") {
@@ -1282,6 +1255,7 @@ func Parking(w http.ResponseWriter, r *http.Request) {
 				checkErr(err)
 
 				res.LastInsertId()
+				logwritter.Notice("Processing request from  Client IP Address: "+IPAddress + " Parking Parkingid: "+Parkingid +" chosen by user " + username)
 				logwritter.Notice("Parking info associated with username " + username + " Inserted")
 
 				db.Close()
@@ -1329,8 +1303,7 @@ func Sensor(w http.ResponseWriter, r *http.Request) {
 	logwritter.Notice("Processing Sensor Data")
 	RemoteIP := strings.Split(r.RemoteAddr, ":")
 	IPAddress := RemoteIP[0]
-	fmt.Println("Processing request from Client IP Address: "+IPAddress)
-	 logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
+	//logwritter.Notice("Processing request from  Client IP Address: "+IPAddress)
 	if strings.EqualFold(r.Method, "PUT") {
 		arrTemp := strings.Split(r.URL.Path, "/")
 		if strings.EqualFold(arrTemp[1], "park") {
@@ -1389,7 +1362,8 @@ func Sensor(w http.ResponseWriter, r *http.Request) {
 				checkErr(err)
 
 				res.LastInsertId()
-				logwritter.Notice("Sensor Data for Parkingid " + Parkingid + " updated")
+				logwritter.Notice("Sensor Data for Parkingid " + Parkingid + " updated" + " from Client IP Address: " + IPAddress)
+				//logwritter.Notice("Sensor Data for Parkingid " + Parkingid + " updated")
 
 				db.Close()
 
