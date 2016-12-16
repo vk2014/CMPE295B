@@ -130,7 +130,7 @@ func main() {
 		//error := http.ListenAndServeTLS(":8443", "/home/cloud-user/go/src/github.com/CMPE295B/server.crt", "/home/cloud-user/go/src/github.com/CMPE295B/server.key", nil)
 		error := http.ListenAndServe(":9443", nil)
 		logwritter1.Err("Unable to Start Vendors Server")
-		fmt.Println("Server finished .....")
+		fmt.Println("Vendors finished 456.....")
 		if err != nil {
 			logwritter1.Alert(error.Error())
 		}
